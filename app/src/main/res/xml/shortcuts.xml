@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Long-press the launcher icon to reach this, and drag it onto a home screen for a
+      standalone one-tap button.
+    -->
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_toggle"
+        android:shortcutId="toggle"
+        android:shortcutLongLabel="@string/toggle_long_label"
+        android:shortcutShortLabel="@string/toggle_label">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.clearcmos.wirelessdebugtile.ToggleActivity"
+            android:targetPackage="com.clearcmos.wirelessdebugtile" />
+    </shortcut>
+</shortcuts>

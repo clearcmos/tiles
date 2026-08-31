@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Wireless Debug Tile</string>
+
+    <!-- Quick Settings caps tile labels at 18 characters. -->
+    <string name="tile_label">Wireless debug</string>
+    <string name="subtitle_on">On</string>
+    <string name="subtitle_off">Off</string>
+    <string name="subtitle_ungranted">Needs grant</string>
+
+    <string name="toggle_label">Toggle wireless debugging</string>
+    <string name="toggle_long_label">Toggle wireless debugging</string>
+
+    <string name="heading_status">Wireless debugging</string>
+    <string name="status_on">On</string>
+    <string name="status_off">Off</string>
+    <string name="action_turn_on">Turn on</string>
+    <string name="action_turn_off">Turn off</string>
+
+    <string name="heading_permission">Permission</string>
+    <string name="permission_granted">WRITE_SECURE_SETTINGS is granted. Toggling works.</string>
+    <string name="permission_missing">WRITE_SECURE_SETTINGS is not granted. Toggling is disabled.</string>
+    <string name="grant_explainer">Run this once from a computer with adb access to this phone. It survives reboots and only needs repeating if the app is reinstalled.</string>
+    <string name="grant_command">adb shell pm grant com.clearcmos.wirelessdebugtile android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="action_copy">Copy command</string>
+
+    <string name="heading_surfaces">Shortcuts</string>
+    <string name="surfaces_explainer">Add the Quick Settings tile below. For a home-screen button, long-press the Wireless Debug Tile icon and drag the Toggle shortcut onto a home screen.</string>
+    <string name="action_add_tile">Add Quick Settings tile</string>
+    <string name="action_open_developer_options">Open developer options</string>
+
+    <string name="toast_on">Wireless debugging on</string>
+    <string name="toast_off">Wireless debugging off</string>
+    <string name="toast_ungranted">WRITE_SECURE_SETTINGS not granted</string>
+    <string name="toast_copied">Command copied</string>
+    <string name="toast_tile_added">Tile added</string>
+    <string name="toast_tile_already_added">Tile is already in Quick Settings</string>
+    <string name="toast_tile_not_added">Tile not added</string>
+</resources>
