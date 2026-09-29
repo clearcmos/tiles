@@ -1,78 +1,107 @@
-# wireless-debug-tile
+# tiles
 
-A Quick Settings tile that turns Android's Wireless debugging on and off in one tap.
+Custom Android Quick Settings tiles, in one app. Developed against a Galaxy S25 on
+Android 16 / One UI 8.5.
 
-## Check whether you need this first
+This app replaces `wireless-debug-tile`, which held the first tile on its own.
 
-Stock Android has shipped a Wireless debugging Quick Settings tile since Android 12.
-Look in Settings > Developer options > Quick settings developer tiles. If it is there,
-use it and ignore this app.
+| Tile | What a tap does | Needs |
+| --- | --- | --- |
+| Wireless debug | Turns Wireless debugging on or off | `WRITE_SECURE_SETTINGS`, granted once over adb |
+| Headset calls | Turns the Bluetooth "Calls" switch on or off on a fixed set of headsets | A workstation on the same network that reaches the phone over wireless adb |
 
-Some OEM skins remove those developer tiles. Samsung's One UI is the case this was
-written for: on a Galaxy S25 running One UI 8.5, enumerating every tile service on the
-device returns 39 results and none of them is a wireless debugging tile.
+The app also has a setup screen showing each tile's state, what it needs, and a button to
+add the tile.
+
+## Wireless debug
+
+### Check whether you need it
+
+Stock Android has shipped a Wireless debugging Quick Settings tile since Android 12. Look
+in Settings > Developer options > Quick settings developer tiles. If it is there, use it.
+
+One UI removes those developer tiles. On the S25, enumerating every tile service returns
+none for wireless debugging:
 
 ```
 adb shell pm query-services -a android.service.quicksettings.action.QS_TILE
 ```
 
-If that comes back without a wireless debugging entry, this app fills the gap.
-
-## Alternatives
-
 [WADBS](https://github.com/Smooth-E/wireless-adb-switch) covers the same ground with more
-features, including several home-screen widgets and enable-on-boot, and it is on F-Droid.
-It is the better choice if you want those, or if you already run Shizuku or root.
+features and is on F-Droid.
 
-This app is smaller and takes a different access route: one `adb` command, granted once,
-and no root, no Shizuku, and no companion process.
+### How it works
 
-## What it does
+Android 11 moved network adb behind the `adb_wifi_enabled` global setting. Writing a
+global setting needs `WRITE_SECURE_SETTINGS`, which the platform declares as
+`signature|privileged|development|installer|role`. The `development` flag lets
+`adb shell pm grant` give it to an ordinary app. After that,
+`Settings.Global.putInt(resolver, "adb_wifi_enabled", 1)` is the whole implementation.
 
-- A Quick Settings tile showing the current state, which flips on tap.
-- A launcher shortcut that can be dragged onto a home screen as a one-tap button.
-- A setup screen with the current state, the permission status, and the grant command.
+Turning wireless debugging off drops any live adb connection, including the one that
+granted the permission, so the tile is also the way back on.
 
-It writes one setting, `adb_wifi_enabled`. It has no network access, stores nothing, and
-requests no other permission.
+A launcher shortcut for this tile can be dragged onto a home screen as a one-tap button.
 
-## Requirements
+## Headset calls
 
-- Android 14 or later.
-- Developer options enabled.
-- One adb session, once, to grant the permission.
+Each paired headset's Bluetooth details page has a "Calls" switch. It is the HFP
+(hands-free profile) connection policy, and changing it needs
+`BluetoothHeadset.setConnectionPolicy`, a system API behind `BLUETOOTH_PRIVILEGED`. That
+permission is `signature|privileged`, so no installable app can hold it and `pm grant`
+refuses it. The adb shell user does hold it.
+
+So the tile does not do the work itself. It runs one command over SSH on a workstation:
+`calls on`, `calls off`, or `calls status`. The workstation runs a small helper on the
+phone at adb shell privilege, over wireless adb, and prints one line per headset:
+
+```
+AA:BB:CC:00:00:01 calls=on hfp=connected Soundcore Life Q30
+```
+
+The tile shows On when every headset has Calls on, Off when none do, and Mixed otherwise.
+A tap turns Calls off only from On, and on from any other state. The headset list lives on
+the workstation, not in the app. The workstation side is not in this repo.
+
+Limits:
+
+- It works only on the home network. Wireless debugging is tied to one access point, so
+  the workstation cannot reach the phone's adb from anywhere else. A VPN does not help.
+- Allowing Calls on a headset that is not connected makes Android try to connect it,
+  and the phone briefly shows "Can't connect" for one that is off or in its case. The
+  Settings switch behaves the same way.
+- The tile shows the last reply. It asks again when the shade opens and the last reply is
+  more than two minutes old, so a change made in Settings shows up late.
+
+### Setup
+
+1. Open the app, enter the workstation host and login name, and tap Save.
+2. The app generates an ECDSA key on first launch. Add the public key to
+   `~/.ssh/authorized_keys` on the workstation, pinned with `restrict,command="..."` to
+   the script that answers the three commands. It is also readable over adb:
+   `adb shell cat /sdcard/Android/data/com.clearcmos.tiles/files/id_ecdsa.pub`
+3. Tap Refresh. The first connection records the workstation's host key and refuses a
+   different one later.
+
+The private key stays in the app's private storage and is excluded from backup.
 
 ## Install
 
 ```
 nix develop --command gradle assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
-adb shell pm grant com.clearcmos.wirelessdebugtile android.permission.WRITE_SECURE_SETTINGS
+adb shell pm grant com.clearcmos.tiles android.permission.WRITE_SECURE_SETTINGS
+adb shell cmd statusbar add-tile com.clearcmos.tiles/com.clearcmos.tiles.wirelessdebug.WirelessDebuggingTileService
+adb shell cmd statusbar add-tile com.clearcmos.tiles/com.clearcmos.tiles.calls.CallsTileService
 ```
 
-Then add the tile, either with the app's "Add Quick Settings tile" button or over adb:
+Reinstalling clears the grant. Re-run the `pm grant` command after every upgrade. New tiles
+are added at the end of the panel, so scroll down to find them.
 
-```
-adb shell cmd statusbar add-tile com.clearcmos.wirelessdebugtile/com.clearcmos.wirelessdebugtile.WirelessDebuggingTileService
-```
+## Requirements
 
-The tile is added at the end of the panel, so scroll down to find it. Drag it somewhere
-useful with the pencil icon in Quick Settings.
-
-Reinstalling clears the grant. Re-run the `pm grant` command after every upgrade.
-
-## How it works
-
-Android 11 moved network adb behind the `adb_wifi_enabled` global setting. Writing a
-global setting needs `WRITE_SECURE_SETTINGS`, which the platform declares as
-`signature|privileged|development|installer|role`. The `development` flag is what lets
-`adb shell pm grant` give it to an ordinary app. After that,
-`Settings.Global.putInt(resolver, "adb_wifi_enabled", 1)` is the whole implementation:
-the framework's `AdbService` watches the setting and starts or stops the transport.
-
-Turning wireless debugging off drops any live adb connection, including the one that
-granted the permission. The tile is therefore also the way back on, which is why a
-missing grant shows as an unavailable tile rather than a hidden one.
+- Android 14 or later.
+- Developer options enabled, and one adb session to grant the permission.
 
 ## Development
 

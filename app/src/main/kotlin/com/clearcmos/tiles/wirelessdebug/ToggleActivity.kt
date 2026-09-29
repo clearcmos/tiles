@@ -1,8 +1,9 @@
-package com.clearcmos.wirelessdebugtile
+package com.clearcmos.tiles.wirelessdebug
 
 import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
+import com.clearcmos.tiles.R
 
 /**
  * The home-screen surface: flip, say what happened, disappear. A launcher shortcut pointing

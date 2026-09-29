@@ -12,7 +12,7 @@
         android:shortcutShortLabel="@string/toggle_label">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="com.clearcmos.wirelessdebugtile.ToggleActivity"
-            android:targetPackage="com.clearcmos.wirelessdebugtile" />
+            android:targetClass="com.clearcmos.tiles.wirelessdebug.ToggleActivity"
+            android:targetPackage="com.clearcmos.tiles" />
     </shortcut>
 </shortcuts>

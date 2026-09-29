@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Wireless Debug Tile</string>
+    <string name="app_name">Tiles</string>
 
     <!-- Quick Settings caps tile labels at 18 characters. -->
     <string name="tile_label">Wireless debug</string>
@@ -21,11 +21,11 @@
     <string name="permission_granted">WRITE_SECURE_SETTINGS is granted. Toggling works.</string>
     <string name="permission_missing">WRITE_SECURE_SETTINGS is not granted. Toggling is disabled.</string>
     <string name="grant_explainer">Run this once from a computer with adb access to this phone. It survives reboots and only needs repeating if the app is reinstalled.</string>
-    <string name="grant_command">adb shell pm grant com.clearcmos.wirelessdebugtile android.permission.WRITE_SECURE_SETTINGS</string>
+    <string name="grant_command">adb shell pm grant com.clearcmos.tiles android.permission.WRITE_SECURE_SETTINGS</string>
     <string name="action_copy">Copy command</string>
 
-    <string name="heading_surfaces">Shortcuts</string>
-    <string name="surfaces_explainer">Add the Quick Settings tile below. For a home-screen button, long-press the Wireless Debug Tile icon and drag the Toggle shortcut onto a home screen.</string>
+    <string name="heading_surfaces">Wireless debugging shortcuts</string>
+    <string name="surfaces_explainer">Add the Quick Settings tile below. For a home-screen button, long-press the Tiles icon and drag the Toggle shortcut onto a home screen.</string>
     <string name="action_add_tile">Add Quick Settings tile</string>
     <string name="action_open_developer_options">Open developer options</string>
 
@@ -36,4 +36,30 @@
     <string name="toast_tile_added">Tile added</string>
     <string name="toast_tile_already_added">Tile is already in Quick Settings</string>
     <string name="toast_tile_not_added">Tile not added</string>
+
+    <!-- Calls tile. Quick Settings caps tile labels at 18 characters. -->
+    <string name="calls_tile_label">Headset calls</string>
+    <string name="calls_subtitle_on">On</string>
+    <string name="calls_subtitle_off">Off</string>
+    <string name="calls_subtitle_mixed">Mixed</string>
+    <string name="calls_subtitle_unknown">Not synced</string>
+    <string name="calls_subtitle_failed">Unreachable</string>
+    <string name="calls_subtitle_unconfigured">Needs setup</string>
+    <string name="calls_subtitle_working">Working</string>
+    <string name="heading_calls">Headset calls</string>
+    <string name="calls_headset_on">%1$s: calls on (hfp %2$s)</string>
+    <string name="calls_headset_off">%1$s: calls off (hfp %2$s)</string>
+    <string name="calls_never_synced">Not synced with the workstation yet.</string>
+    <string name="calls_detail">%1$s</string>
+    <string name="calls_updated">Updated %1$s.</string>
+    <string name="action_calls_toggle">Toggle calls</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="calls_explainer">Flips the Calls switch in Bluetooth device details on both headsets. That switch needs a privilege no app can hold, so the workstation does it over adb and this app asks it over SSH. Works on the home network only.</string>
+    <string name="hint_host">Workstation host</string>
+    <string name="hint_user">Login name</string>
+    <string name="action_save">Save</string>
+    <string name="calls_key_explainer">Add this key to ~/.ssh/authorized_keys on the workstation, pinned to the script that answers calls on, calls off and calls status.</string>
+    <string name="action_copy_key">Copy key</string>
+    <string name="action_add_calls_tile">Add Headset calls tile</string>
+    <string name="toast_saved">Saved</string>
 </resources>

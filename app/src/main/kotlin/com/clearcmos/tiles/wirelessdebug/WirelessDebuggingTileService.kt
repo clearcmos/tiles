@@ -1,4 +1,4 @@
-package com.clearcmos.wirelessdebugtile
+package com.clearcmos.tiles.wirelessdebug
 
 import android.app.PendingIntent
 import android.content.Intent
@@ -6,6 +6,7 @@ import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
 import android.service.quicksettings.TileService
+import com.clearcmos.tiles.MainActivity
 
 /**
  * The one-tap surface. Turning wireless debugging off drops any adb connection, including

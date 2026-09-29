@@ -1,4 +1,4 @@
-package com.clearcmos.wirelessdebugtile
+package com.clearcmos.tiles.wirelessdebug
 
 import android.Manifest
 import android.content.ContentResolver

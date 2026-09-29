@@ -1,4 +1,4 @@
-package com.clearcmos.wirelessdebugtile
+package com.clearcmos.tiles.wirelessdebug
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

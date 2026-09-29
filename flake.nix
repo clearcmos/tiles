@@ -1,5 +1,5 @@
 {
-  description = "wireless-debug-tile: a Quick Settings tile that toggles Android wireless debugging";
+  description = "tiles: custom Android Quick Settings tiles";
 
   inputs.nixpkgs.url = "https://flakehub.com/f/DeterminateSystems/nixpkgs-weekly/*.tar.gz";
 

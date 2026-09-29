@@ -1,7 +1,8 @@
-package com.clearcmos.wirelessdebugtile
+package com.clearcmos.tiles.wirelessdebug
 
 import android.service.quicksettings.Tile
 import androidx.annotation.StringRes
+import com.clearcmos.tiles.R
 
 /**
  * What the tile shows, derived from the only two facts that matter. Kept free of Android

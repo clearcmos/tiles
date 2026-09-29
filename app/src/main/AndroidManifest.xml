@@ -5,7 +5,7 @@
     <!--
       Granted once over adb, which is possible because the platform declares this
       permission with the "development" protection flag:
-        adb shell pm grant com.clearcmos.wirelessdebugtile android.permission.WRITE_SECURE_SETTINGS
+        adb shell pm grant com.clearcmos.tiles android.permission.WRITE_SECURE_SETTINGS
       Without it every write to adb_wifi_enabled throws SecurityException and the app
       falls back to opening the Wireless debugging settings page.
     -->
@@ -13,13 +13,16 @@
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- The Calls tile asks the workstation over SSH. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.WirelessDebugTile">
+        android:theme="@style/Theme.Tiles">
 
         <activity
             android:name=".MainActivity"
@@ -42,16 +45,16 @@
           a home screen, which gives a one-tap icon without an AppWidgetProvider.
         -->
         <activity
-            android:name=".ToggleActivity"
+            android:name=".wirelessdebug.ToggleActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:label="@string/toggle_label"
             android:noHistory="true"
             android:taskAffinity=""
-            android:theme="@style/Theme.WirelessDebugTile.Invisible" />
+            android:theme="@style/Theme.Tiles.Invisible" />
 
         <service
-            android:name=".WirelessDebuggingTileService"
+            android:name=".wirelessdebug.WirelessDebuggingTileService"
             android:exported="true"
             android:icon="@drawable/ic_tile"
             android:label="@string/tile_label"
@@ -64,6 +67,23 @@
                 android:name="android.service.quicksettings.TOGGLEABLE_TILE"
                 android:value="true" />
             <!-- Android 16 groups the tile editor by category. -->
+            <meta-data
+                android:name="android.service.quicksettings.TILE_CATEGORY"
+                android:value="android.service.quicksettings.CATEGORY_CONNECTIVITY" />
+        </service>
+
+        <service
+            android:name=".calls.CallsTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_calls"
+            android:label="@string/calls_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
             <meta-data
                 android:name="android.service.quicksettings.TILE_CATEGORY"
                 android:value="android.service.quicksettings.CATEGORY_CONNECTIVITY" />

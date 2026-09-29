@@ -1,9 +1,18 @@
-# wireless-debug-tile
+# tiles
 
-A Quick Settings tile that toggles Android's Wireless debugging. Developed against a
-Galaxy S25 (SM-S931W) on Android 16 / One UI 8.5. Nothing in it is Samsung specific.
+Custom Quick Settings tiles in one app (`com.clearcmos.tiles`). Developed against a
+Galaxy S25 (SM-S931W) on Android 16 / One UI 8.5. This repo was `wireless-debug-tile`
+until the second tile arrived; its history carries over.
 
-## Why it exists
+Each tile lives in its own package with its own `TileService`. `MainActivity` is the
+shared setup screen and the long-press target of every tile. Add a tile as a new package,
+a `<service>` entry in the manifest, and a section in `activity_main.xml`.
+
+The one shared hazard: every reinstall clears the `WRITE_SECURE_SETTINGS` grant, and the
+Wireless debug tile is the on-device way back when adb is lost. Re-run `pm grant` in the
+same command as every install, whichever tile you are working on.
+
+## Wireless debug: why it exists
 
 Stock Android has a built-in Wireless debugging developer tile from Android 12 on. One UI
 strips the developer tiles, verified by enumerating every tile service on the device:
@@ -14,7 +23,7 @@ adb shell pm query-services -a android.service.quicksettings.action.QS_TILE
 
 39 services, no wireless debugging tile. Check this before assuming a device needs the app.
 
-## The mechanism
+## Wireless debug: the mechanism
 
 - Android 11 moved network adb to the `adb_wifi_enabled` global setting. The older
   `adb_enabled` global is USB debugging and is not touched here. The target device runs
@@ -33,17 +42,53 @@ adb shell dumpsys package permission android.permission.WRITE_SECURE_SETTINGS
 ## Layout
 
 ```
-app/src/main/kotlin/com/clearcmos/wirelessdebugtile/
-  WirelessDebugging.kt            read, write, observe the setting; permission check
-  TileAppearance.kt               pure state mapping, the only unit-tested logic
-  WirelessDebuggingTileService.kt the Quick Settings tile
-  ToggleActivity.kt               invisible flip-and-toast, target of the shortcut
-  MainActivity.kt                 setup and status, also the tile's long-press target
+app/src/main/kotlin/com/clearcmos/tiles/
+  MainActivity.kt                 setup and status for every tile, long-press target
+  wirelessdebug/
+    WirelessDebugging.kt            read, write, observe the setting; permission check
+    TileAppearance.kt               pure state mapping, unit tested
+    WirelessDebuggingTileService.kt the tile
+    ToggleActivity.kt               invisible flip-and-toast, target of the shortcut
+  calls/
+    CallsStatus.kt                  reply parsing, tap target, appearance; pure, unit tested
+    Calls.kt                        prefs, single-thread request runner, change listeners
+    CallsTileService.kt             the tile
+    SshClient.kt                    jsch client adapted from kata's
 app/src/main/res/xml/shortcuts.xml  static launcher shortcut to ToggleActivity
 ```
 
 `ToggleActivity` extends `android.app.Activity`, not `AppCompatActivity`, so it can use a
 plain translucent platform theme and never inflate a view.
+
+## Headset calls: the mechanism
+
+- The "Calls" switch in a headset's Bluetooth details is the HFP connection policy,
+  visible as `HEADSET=0` (off) or `100` (on) per device in `adb shell dumpsys bluetooth_manager`.
+  Setting it to allowed makes `HeadsetService` connect HFP; forbidden drops it about a
+  second later.
+- `BluetoothHeadset.setConnectionPolicy` is `@SystemApi` behind `BLUETOOTH_PRIVILEGED`,
+  declared `signature|privileged` with no `development` flag, so `pm grant` refuses it.
+  Shizuku would work but was not chosen. The adb shell UID holds it, and the workstation
+  already runs a helper dex at that UID for Bluetooth handoff.
+- So the tile runs `calls on|off|status` over SSH on the workstation, which answers with
+  one `<mac> calls=on|off hfp=<state> <name>` line per headset. The headset list lives on
+  the workstation. The app's key must be pinned there with `restrict,command=` to the
+  script that dispatches those verbs.
+- LAN only by construction: wireless debugging is scoped to one access point, so the
+  workstation cannot reach the phone's adb away from home. A VPN to the workstation does
+  not change that.
+- ECDSA, not ed25519: jsch's ed25519 lives in its Java 15+ multi-release classes, which
+  Android ignores.
+- A tap sets Calls off only when every headset reports on; any other state, including
+  never synced, sets on.
+- While a request is in flight the tile is `STATE_UNAVAILABLE`, which also stops SystemUI
+  delivering a second tap. Failures show as inactive "Unreachable" so a tap retries.
+  An unconfigured tile is inactive, not unavailable, so a tap reaches `onClick` and opens
+  the app.
+- The last reply is persisted in SharedPreferences. `onStartListening` refreshes when the
+  reply is over two minutes old, so the shade does not SSH every time it opens.
+- Verified end to end on 2026-09-29: app toggle off, then Quick Settings tile tap on, with
+  `dumpsys bluetooth_manager` and the Settings switch agreeing each time.
 
 ## Build
 
@@ -68,8 +113,9 @@ Reinstalling clears the grant, so a full cycle is:
 
 ```
 adb install -r app/build/outputs/apk/debug/app-debug.apk
-adb shell pm grant com.clearcmos.wirelessdebugtile android.permission.WRITE_SECURE_SETTINGS
-adb shell cmd statusbar add-tile com.clearcmos.wirelessdebugtile/com.clearcmos.wirelessdebugtile.WirelessDebuggingTileService
+adb shell pm grant com.clearcmos.tiles android.permission.WRITE_SECURE_SETTINGS
+adb shell cmd statusbar add-tile com.clearcmos.tiles/com.clearcmos.tiles.wirelessdebug.WirelessDebuggingTileService
+adb shell cmd statusbar add-tile com.clearcmos.tiles/com.clearcmos.tiles.calls.CallsTileService
 ```
 
 ### The lockout hazard

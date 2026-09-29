@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.WirelessDebugTile" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <style name="Theme.Tiles" parent="Theme.AppCompat.DayNight.NoActionBar" />
 
     <!-- ToggleActivity never draws; it flips the setting, shows a toast and finishes. -->
-    <style name="Theme.WirelessDebugTile.Invisible" parent="@android:style/Theme.Translucent.NoTitleBar">
+    <style name="Theme.Tiles.Invisible" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowContentOverlay">@null</item>

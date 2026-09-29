@@ -7,13 +7,13 @@ plugins {
 }
 
 android {
-    namespace = "com.clearcmos.wirelessdebugtile"
+    namespace = "com.clearcmos.tiles"
     compileSdk = 36
     // Pinned so the read-only nix SDK is never asked to download a different revision.
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
-        applicationId = "com.clearcmos.wirelessdebugtile"
+        applicationId = "com.clearcmos.tiles"
         // 34 so startActivityAndCollapse(PendingIntent) and the StatusBarManager
         // add-tile request are both available without version guards.
         minSdk = 34
@@ -59,5 +59,6 @@ ktlint {
 
 dependencies {
     implementation(libs.androidx.appcompat)
+    implementation(libs.jsch)
     testImplementation(libs.junit)
 }

@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "wireless-debug-tile"
+rootProject.name = "tiles"
 include(":app")

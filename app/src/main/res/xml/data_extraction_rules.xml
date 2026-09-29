@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The app keeps no state: everything it reads and writes lives in Settings.Global. -->
+<!-- Nothing is backed up: the SSH key must never leave the device, and the rest is cheap to redo. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" />
