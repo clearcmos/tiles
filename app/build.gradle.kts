@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ktlint)
+    jacoco
 }
 
 android {
@@ -23,6 +24,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+        }
         release {
             isMinifyEnabled = false
         }
@@ -55,6 +59,46 @@ kotlin {
 ktlint {
     android.set(true)
     outputToConsole.set(true)
+}
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+// Only the classes the unit tests can reach without a device are measured; the tile
+// services, activities, and SSH client need Android or a live host and are exempt.
+val coverageClasses =
+    fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug")) {
+        exclude("**/R.class", "**/R\$*.class", "**/BuildConfig.*", "**/databinding/**")
+    }
+
+val coverageData =
+    layout.buildDirectory.file("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+
+val jacocoDebugReport by tasks.registering(JacocoReport::class) {
+    dependsOn("testDebugUnitTest")
+    classDirectories.setFrom(coverageClasses)
+    sourceDirectories.setFrom("src/main/kotlin")
+    executionData.setFrom(coverageData)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+val jacocoDebugCoverageVerification by tasks.registering(JacocoCoverageVerification::class) {
+    dependsOn(jacocoDebugReport)
+    classDirectories.setFrom(coverageClasses)
+    sourceDirectories.setFrom("src/main/kotlin")
+    executionData.setFrom(coverageData)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                minimum = "0.15".toBigDecimal()
+            }
+        }
+    }
 }
 
 dependencies {

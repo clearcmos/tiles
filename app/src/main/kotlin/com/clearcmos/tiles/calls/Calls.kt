@@ -45,9 +45,6 @@ object Calls {
     // Covers the workstation reconnecting adb, which scans for a port when the pin is lost.
     private const val COMMAND_TIMEOUT_MS = 30_000
 
-    /** How old the last reply may be before the tile asks again when the shade opens. */
-    private const val STALE_MS = 2 * 60_000L
-
     private val executor = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private val listeners = CopyOnWriteArraySet<() -> Unit>()
@@ -100,7 +97,7 @@ object Calls {
 
     fun refreshIfStale(context: Context) {
         val state = state(context)
-        if (state.configured && !state.busy && System.currentTimeMillis() - state.updatedAt > STALE_MS) {
+        if (state.configured && !state.busy && CallsReply.isStale(state.updatedAt, System.currentTimeMillis())) {
             refresh(context)
         }
     }
@@ -136,12 +133,7 @@ object Calls {
     ): Pair<String?, String?> =
         try {
             val result = SshClient(context).run(host, user, command, CONNECT_TIMEOUT_MS, COMMAND_TIMEOUT_MS)
-            val headsets = CallsReply.parse(result.output)
-            when {
-                result.exitStatus == 0 && headsets.isNotEmpty() -> result.output to null
-                headsets.isNotEmpty() -> result.output to result.output.lines().last()
-                else -> null to result.output.ifBlank { "$command exited ${result.exitStatus}" }
-            }
+            CallsReply.outcome(command, result.exitStatus, result.output)
         } catch (e: SshException) {
             null to e.message
         } catch (e: Exception) {

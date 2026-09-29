@@ -30,6 +30,32 @@ object CallsReply {
                 }
             }.toList()
 
+    /** How old the last reply may be before the tile asks again when the shade opens. */
+    private const val STALE_MS = 2 * 60_000L
+
+    fun isStale(
+        updatedAt: Long,
+        now: Long,
+    ): Boolean = now - updatedAt > STALE_MS
+
+    /**
+     * Splits a finished command into the raw reply to keep and the error to show. A reply that
+     * parsed is kept even when the command failed, so the last known state survives; the error
+     * is then the script's final line.
+     */
+    fun outcome(
+        command: String,
+        exitStatus: Int,
+        output: String,
+    ): Pair<String?, String?> {
+        val headsets = parse(output)
+        return when {
+            exitStatus == 0 && headsets.isNotEmpty() -> output to null
+            headsets.isNotEmpty() -> output to output.lines().last()
+            else -> null to output.ifBlank { "$command exited $exitStatus" }
+        }
+    }
+
     /** A tap turns Calls on unless every headset already has it on, so a mixed state converges on on. */
     fun target(headsets: List<Headset>): Boolean = headsets.isEmpty() || !headsets.all { it.callsOn }
 }

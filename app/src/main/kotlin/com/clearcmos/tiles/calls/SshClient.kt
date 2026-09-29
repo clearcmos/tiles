@@ -22,6 +22,29 @@ class SshException(
 ) : IOException(message)
 
 /**
+ * jsch reports every failure as one exception type, so the message is the only signal. An
+ * unreachable host and a rejected key need completely different fixes.
+ */
+internal fun describeConnectFailure(
+    host: String,
+    user: String,
+    detail: String,
+): String =
+    when {
+        detail.contains("Auth fail", ignoreCase = true) ||
+            detail.contains("Auth cancel", ignoreCase = true) ->
+            "$user@$host refused this app's key. Add it to ~/.ssh/authorized_keys there."
+
+        detail.contains("HostKey", ignoreCase = true) || detail.contains("reject", ignoreCase = true) ->
+            "$host presented a different host key than the one recorded. If the machine was " +
+                "rebuilt, clear the app's storage and let it pin again."
+
+        else ->
+            "Could not reach $user@$host ($detail). The workstation is probably off or this " +
+                "phone is not on the home network."
+    }
+
+/**
  * Runs one command on the workstation. Adapted from kata's client.
  *
  * The key is generated on the device on first use and never leaves it; only the public half is
@@ -91,7 +114,7 @@ class SshClient(
         try {
             session.connect(connectTimeoutMs)
         } catch (e: JSchException) {
-            throw SshException(describeConnectFailure(host, user, e))
+            throw SshException(describeConnectFailure(host, user, e.message.orEmpty()))
         }
 
         try {
@@ -115,31 +138,6 @@ class SshClient(
             return SshResult(status, captured.toString(Charsets.UTF_8.name()).trim())
         } finally {
             session.disconnect()
-        }
-    }
-
-    /**
-     * jsch reports every failure as one exception type, so the message is the only signal. An
-     * unreachable host and a rejected key need completely different fixes.
-     */
-    private fun describeConnectFailure(
-        host: String,
-        user: String,
-        e: JSchException,
-    ): String {
-        val detail = e.message.orEmpty()
-        return when {
-            detail.contains("Auth fail", ignoreCase = true) ||
-                detail.contains("Auth cancel", ignoreCase = true) ->
-                "$user@$host refused this app's key. Add it to ~/.ssh/authorized_keys there."
-
-            detail.contains("HostKey", ignoreCase = true) || detail.contains("reject", ignoreCase = true) ->
-                "$host presented a different host key than the one recorded. If the machine was " +
-                    "rebuilt, clear the app's storage and let it pin again."
-
-            else ->
-                "Could not reach $user@$host ($detail). The workstation is probably off or this " +
-                    "phone is not on the home network."
         }
     }
 

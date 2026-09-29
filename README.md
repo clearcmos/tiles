@@ -111,6 +111,7 @@ The build runs in a nix devShell pinning the JDK, Gradle, and the Android SDK.
 nix develop
 gradle assembleDebug
 gradle testDebugUnitTest
+gradle jacocoDebugCoverageVerification
 gradle ktlintCheck lintDebug
 gradle ktlintFormat
 ```

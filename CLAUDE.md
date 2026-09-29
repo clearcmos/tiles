@@ -100,6 +100,7 @@ read-only nix store SDK is never asked to fetch another revision, and `GRADLE_OP
 ```
 nix develop --command gradle assembleDebug
 nix develop --command gradle testDebugUnitTest
+nix develop --command gradle jacocoDebugCoverageVerification
 nix develop --command gradle ktlintCheck lintDebug
 nix develop --command gradle ktlintFormat
 ```
@@ -166,3 +167,31 @@ port and assigns a new random one, so reconnecting needs a port scan.
 - Tile labels are capped at 18 characters by the platform, hence "Wireless debug".
 - `targetSdk` 35 and up draws edge to edge, so `MainActivity` applies system bar insets as
   padding on top of the layout's own.
+
+## Engineering baseline
+
+Tier 2 (public remote, LICENSE). CI in `.github/workflows/ci.yml` runs unit tests, the
+coverage gate, ktlint, and lint through the nix devShell, with a `ci-ok` aggregate job.
+Dependabot covers GitHub Actions and Gradle monthly; version bumps stay deliberate reviewed
+changes.
+
+- Coverage: JaCoCo over the debug unit tests, gated in `app/build.gradle.kts` at 15% line
+  coverage against a measured 16.3% (2026-09-29). Ratchet the minimum up when tests
+  are added; never down.
+- Test exemptions: the tile services, `MainActivity`, `ToggleActivity`, and the I/O bodies of
+  `Calls.kt` and `SshClient.kt` need Android framework classes or a live SSH host and have no
+  unit tests. `WirelessDebugging.kt` is a thin `Settings.Global` wrapper. Their decision logic
+  is extracted and tested: `CallsReply.outcome` and `isStale`, and `describeConnectFailure`.
+- Changelog: none kept. Git history and this file's decision log serve the purpose.
+
+## Decision log
+
+- 2026-09-29: merged `wireless-debug-tile` into this multi-tile app. Every reinstall clears
+  `WRITE_SECURE_SETTINGS`, and the Wireless debug tile is the on-device way back when adb is
+  lost, so `pm grant` runs in the same command as every install.
+- 2026-09-29: a detached `setsid` recovery loop over adb was tried for the wireless-debug
+  off direction and died with the connection before its first sleep elapsed. The only
+  recovery is on the device.
+- 2026-09-29: SSH keys are ECDSA because jsch's ed25519 lives in Java 15+ multi-release
+  classes that Android ignores.
+- 2026-09-29: added CI, dependabot, and the JaCoCo gate under the eng-baseline audit.
